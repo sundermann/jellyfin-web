@@ -8,6 +8,15 @@ import { appRouter } from '../components/appRouter';
 class HomeView extends TabbedView {
     constructor(view, params) {
         super(view, params);
+        this.addMenuLinksToIndexPage(this);
+        this.getTabs = this.getTabs.bind(this);
+    }
+
+    getMenuLinks() {
+        return [{
+            'name': 'Anfragen',
+            'url': 'https://jellyseerr.sunder-mann.eu'
+        }];
     }
 
     setTitle() {
@@ -29,11 +38,14 @@ class HomeView extends TabbedView {
     }
 
     getTabs() {
-        return [{
-            name: globalize.translate('Home')
-        }, {
-            name: globalize.translate('Favorites')
-        }];
+        const links = this.getMenuLinks();
+        const linkNames = links.map(link => ({ name: link.name }));
+
+        return [
+            { name: globalize.translate('Home') },
+            { name: globalize.translate('Favorites') },
+            ...linkNames
+        ];
     }
 
     getTabController(index) {
@@ -50,6 +62,10 @@ class HomeView extends TabbedView {
 
             case 1:
                 depends = 'favorites';
+                break;
+            default:
+                depends = 'menulink';
+                break;
         }
 
         const instance = this;
@@ -62,6 +78,38 @@ class HomeView extends TabbedView {
             }
 
             return controller;
+        });
+    }
+
+    addMenuLinksToIndexPage() {
+        const indexPage = document.querySelector('#indexPage');
+
+        // Add CSS style tag to the header
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.appendChild(document.createTextNode('.page.fullscreen { padding-bottom: 0 !important; padding-top: 4.3em !important; }'));
+        document.head.appendChild(style);
+
+        let i = 0;
+        this.getMenuLinks().forEach(link => {
+            const div = document.createElement('div');
+            div.style.cssText += 'padding-bottom: 0 !important';
+            div.style.display = 'flex';
+            div.style.width = '100%';
+            div.style.height = '100%';
+            div.classList.add('tabContent', 'pageTabContent', 'menuLink');
+            div.dataset.index = (i + 2).toString();
+            div.dataset.url = link.url;
+
+            const sectionsDiv = document.createElement('div');
+            sectionsDiv.className = 'sections';
+            sectionsDiv.style.display = 'flex';
+            sectionsDiv.style.width = '100%';
+            sectionsDiv.style.height = '100%';
+
+            div.appendChild(sectionsDiv);
+            indexPage.appendChild(div);
+            i++;
         });
     }
 }
