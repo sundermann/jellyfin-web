@@ -77,7 +77,7 @@ import '../elements/emby-button/emby-button';
         });
     }
 
-    export function setTabs(view, selectedIndex, getTabsFn, getTabContainersFn, onBeforeTabChange, onTabChange, setSelectedIndex) {
+    export async function setTabs(view, selectedIndex, getTabsFn, getTabContainersFn, onBeforeTabChange, onTabChange, setSelectedIndex) {
         ensureElements();
 
         if (!view) {
@@ -104,8 +104,9 @@ import '../elements/emby-button/emby-button';
         if (tabOwnerView !== view) {
             let index = 0;
 
+            const tabs = await getTabsFn();
             const indexAttribute = selectedIndex == null ? '' : (' data-index="' + selectedIndex + '"');
-            const tabsHtml = '<div is="emby-tabs"' + indexAttribute + ' class="tabs-viewmenubar"><div class="emby-tabs-slider" style="white-space:nowrap;">' + getTabsFn().map(function (t) {
+            const tabsHtml = '<div is="emby-tabs"' + indexAttribute + ' class="tabs-viewmenubar"><div class="emby-tabs-slider" style="white-space:nowrap;">' + tabs.map(function (t) {
                 let tabClass = 'emby-tab-button';
 
                 if (t.enabled === false) {
@@ -186,7 +187,10 @@ import '../elements/emby-button/emby-button';
         };
     }
 
-    export function selectedTabIndex(index) {
+    export async function selectedTabIndex(index) {
+        while (!tabsElem) {
+            await new Promise(r => setTimeout(r, 100));
+        }
         if (index != null) {
             tabsElem.selectedIndex(index);
         } else {

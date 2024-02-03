@@ -4,10 +4,12 @@ import '../elements/emby-tabs/emby-tabs';
 import '../elements/emby-button/emby-button';
 import '../elements/emby-scroller/emby-scroller';
 import { appRouter } from '../components/appRouter';
+import { getMenuLinks } from '../scripts/settings/webSettings';
 
 class HomeView extends TabbedView {
     constructor(view, params) {
         super(view, params);
+        this.addMenuLinksToIndexPage(this);
     }
 
     setTitle() {
@@ -28,12 +30,15 @@ class HomeView extends TabbedView {
         return 0;
     }
 
-    getTabs() {
-        return [{
-            name: globalize.translate('Home')
-        }, {
-            name: globalize.translate('Favorites')
-        }];
+    async getTabs() {
+        const links = await getMenuLinks();
+        const linkNames = links.map(link => ({ name: link.name }));
+
+        return [
+            { name: globalize.translate('Home') },
+            { name: globalize.translate('Favorites') },
+            ...linkNames
+        ];
     }
 
     getTabController(index) {
@@ -50,6 +55,10 @@ class HomeView extends TabbedView {
 
             case 1:
                 depends = 'favorites';
+                break;
+            default:
+                depends = 'menulink';
+                break;
         }
 
         const instance = this;
@@ -62,6 +71,28 @@ class HomeView extends TabbedView {
             }
 
             return controller;
+        });
+    }
+
+    addMenuLinksToIndexPage() {
+        getMenuLinks().then(links => {
+            const indexPage = document.querySelector('#indexPage');
+
+            let i = 0;
+            links.forEach(link => {
+                const div = document.createElement('div');
+                div.style.cssText += 'padding-bottom: 0 !important';
+                div.style.display = 'flex';
+                div.style.width = '100%';
+                div.style.height = '100%';
+                div.classList.add('tabContent', 'pageTabContent', 'menuLink');
+                div.dataset.index = i + 2;
+                div.dataset.url = link.url;
+                div.innerHTML = '<div class="sections" style="display:flex; width: 100%; height: 100%"></div>';
+                indexPage.appendChild(div);
+                i++;
+            });
+            this.menuLinks = links;
         });
     }
 }
